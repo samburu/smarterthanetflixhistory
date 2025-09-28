@@ -7,8 +7,7 @@ from .serializers import MovieSerializer, FavoriteMovieSerializer
 from .services.tmdb import fetch_from_tmdb, TMDbAPIError
 
 
-
-# Movies (only if we want CRUD for stored movies, optional)
+# Movies (CRUD optional)
 class MovieListCreateView(generics.ListCreateAPIView):
     queryset = Movie.objects.all().order_by("-created_at")
     serializer_class = MovieSerializer
@@ -27,6 +26,8 @@ class FavoriteMovieListCreateView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return FavoriteMovie.objects.none()
         return FavoriteMovie.objects.filter(user=self.request.user).select_related("movie")
 
     def perform_create(self, serializer):
@@ -38,6 +39,8 @@ class FavoriteMovieDetailView(generics.RetrieveDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return FavoriteMovie.objects.none()
         return FavoriteMovie.objects.filter(user=self.request.user).select_related("movie")
 
 
@@ -45,6 +48,8 @@ class TrendingMoviesView(APIView):
     """
     Get trending movies from TMDb.
     """
+    permission_classes = [permissions.IsAuthenticated]
+
     def get(self, request, *args, **kwargs):
         try:
             results = fetch_from_tmdb("trending/movie/week")
@@ -58,6 +63,8 @@ class RecommendedMoviesView(APIView):
     Get movie recommendations based on TMDb ID.
     Example: /api/movies/550/recommendations/
     """
+    permission_classes = [permissions.IsAuthenticated]
+
     def get(self, request, tmdb_id, *args, **kwargs):
         try:
             results = fetch_from_tmdb(f"movie/{tmdb_id}/recommendations")
