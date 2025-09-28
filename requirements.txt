@@ -8,3 +8,5 @@ djangorestframework-simplejwt
 drf-yasg
 redis
 django-redis
+dj-database-url
+psycopg2-binary

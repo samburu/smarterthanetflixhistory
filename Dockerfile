@@ -10,3 +10,10 @@ COPY requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . /app/
+
+# Expose Render's expected port
+ENV PORT 10000
+EXPOSE $PORT
+
+# Start command
+CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:10000"]
