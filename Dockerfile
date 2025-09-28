@@ -12,6 +12,7 @@ COPY . /app/
 
 RUN python manage.py collectstatic --noinput
 
-EXPOSE 8000
+# Let Render inject the port dynamically
+EXPOSE $PORT
 
-CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "4"]
+CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:$PORT", "--workers", "4"]
