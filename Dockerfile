@@ -10,10 +10,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . /app/
 
-RUN python manage.py collectstatic --noinput
-
-# Let Render inject the port dynamically
 EXPOSE 8000
 
-CMD gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 4
-
+CMD bash -c "python manage.py collectstatic --noinput && gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 4"
