@@ -1,5 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from django.core.cache import cache
 
 from rest_framework import generics, permissions, status
 from .models import Movie, FavoriteMovie
@@ -45,29 +46,37 @@ class FavoriteMovieDetailView(generics.RetrieveDestroyAPIView):
 
 
 class TrendingMoviesView(APIView):
-    """
-    Get trending movies from TMDb.
-    """
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
+        cache_key = "trending_movies"
+        cached_data = cache.get(cache_key)
+
+        if cached_data:
+            return Response(cached_data, status=status.HTTP_200_OK)
+
         try:
             results = fetch_from_tmdb("trending/movie/week")
+            cache.set(cache_key, results, timeout=3600)  # cache for 1 hour
             return Response(results, status=status.HTTP_200_OK)
         except TMDbAPIError as e:
             return Response({"error": str(e)}, status=status.HTTP_502_BAD_GATEWAY)
 
 
 class RecommendedMoviesView(APIView):
-    """
-    Get movie recommendations based on TMDb ID.
-    Example: /api/movies/550/recommendations/
-    """
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, tmdb_id, *args, **kwargs):
+        cache_key = f"recommended_movies_{tmdb_id}"
+        cached_data = cache.get(cache_key)
+
+        if cached_data:
+            return Response(cached_data, status=status.HTTP_200_OK)
+
         try:
             results = fetch_from_tmdb(f"movie/{tmdb_id}/recommendations")
+            cache.set(cache_key, results, timeout=3600)
             return Response(results, status=status.HTTP_200_OK)
         except TMDbAPIError as e:
             return Response({"error": str(e)}, status=status.HTTP_502_BAD_GATEWAY)
+
